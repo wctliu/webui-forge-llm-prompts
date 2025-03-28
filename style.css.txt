@@ -156,35 +156,18 @@
     opacity: 0.7;
 }
 
-.gptp-loading::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 48px;
-    height: 48px;
-    border: 4px solid #10a37f;
-    border-radius: 50%;
-    border-top-color: transparent;
-    box-shadow: 0 0 10px rgba(16, 163, 127, 0.5);
-    animation: spin 0.8s linear infinite, pulse 1.5s ease-in-out infinite; /* 添加脉冲动画 */
-}
-
-@keyframes pulse {
-    0% {
-        transform: translate(-50%, -50%) scale(0.8); /* 从稍小开始 */
-        opacity: 0.7;
+    .gptp-loading::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 24px;
+        height: 24px;
+        border: 3px solid #10a37f;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 0.8s linear infinite;
     }
-    50% {
-        transform: translate(-50%, -50%) scale(1.2); /* 放大到稍大 */
-        opacity: 1;
-    }
-    100% {
-        transform: translate(-50%, -50%) scale(0.8); /* 回到稍小 */
-        opacity: 0.7;
-    }
-}
 
 @keyframes spin {
     to {
@@ -231,28 +214,4 @@
 .gptp-icon:focus {
     outline: 2px solid #10a37f;
     outline-offset: 2px;
-}
-/* API选择器样式 */
-.gptp-api-selector {
-    background: #2d2d2d; /* 深色背景，提高可读性 */
-    color: #ffffff; /* 白色文本，确保高对比度 */
-    border: 1px solid #40414f; /* 与其他元素一致的边框颜色 */
-    border-radius: 4px; /* 圆角设计 */
-    padding: 8px 12px; /* 适当的内边距 */
-    font-size: 16px; /* 与其他元素一致的字体大小 */
-    cursor: pointer; /* 指示可交互性 */
-    transition: all 0.3s ease; /* 平滑的过渡效果 */
-    width: 100%; /* 根据布局调整宽度 */
-}
-
-/* 悬停效果 */
-.gptp-api-selector:hover {
-    background: #40414f; /* 悬停时背景略亮 */
-    border-color: #10a37f; /* 悬停时边框变为青色 */
-}
-
-/* 聚焦状态（可访问性） */
-.gptp-api-selector:focus {
-    outline: 2px solid #10a37f; /* 青色轮廓线 */
-    outline-offset: 2px; /* 轮廓偏移 */
 }

@@ -1,0 +1,312 @@
+import json
+import os
+import urllib.request
+from typing import Optional, List, Dict, Union
+import gradio as gr
+import modules.shared as shared
+import requests
+import modules.script_callbacks as script_callbacks
+from openai import OpenAI
+import openai
+from fastapi import FastAPI, Request
+from pydantic import BaseModel
+
+# Request Models
+class DeepSeekRequest(BaseModel):
+    model: str
+    messages: List[Dict[str, str]]
+    text: str
+    system_message: Optional[str] = None
+    temperature: float = 0.7
+    max_tokens: int = 800
+    top_p: float = 1.0
+
+class GPTRequest(BaseModel):
+    model: str
+    messages: List[Dict[str, str]]
+    max_tokens: int
+    temperature: float
+    top_p: float
+    top_k: int
+    response_format: Dict[str, str]
+
+class TranslationRequest(BaseModel):
+    text: str
+    target_lang: str = "EN"
+
+class SiliconFlowRequest(BaseModel):
+    model: str
+    messages: List[Dict[str, str]]
+    max_tokens: int
+    temperature: Optional[float] = 0.7
+    top_p: Optional[float] = 0.7
+    top_k: Optional[int] = 50
+    response_format: Dict[str, str]
+
+class HunyuanRequest(BaseModel):
+    model: str
+    messages: List[Dict[str, Union[str, List[Dict]]]]
+    temperature: Optional[float] = 0.7
+    top_p: Optional[float] = 1.0
+    max_tokens: Optional[int] = 800
+
+class VolcengineArkRequest(BaseModel):
+    model: str
+    messages: List[Dict[str, str]]
+    temperature: Optional[float] = 0.7
+    max_tokens: Optional[int] = 800
+    top_p: Optional[float] = 1.0
+
+class BaiduQianfanRequest(BaseModel):
+    model: str
+    messages: List[Dict[str, str]]
+    temperature: Optional[float] = 0.7
+    max_tokens: Optional[int] = 800
+    top_p: Optional[float] = 0.8
+
+class GptpApi:
+    """ChatGPT Prompt API 类，提供多种模型支持和文件管理功能"""
+    BASE_PATH = "/sdapi/chatgpt-prompts/v1"
+
+    def __init__(self):
+        self.app: Optional[FastAPI] = None
+        self._registered: bool = False
+        self._registered_routes: set = set()
+        self._prompt_routes_added: bool = False
+
+    def get_path(self, path: str) -> str:
+        return f"{self.BASE_PATH}{path}"
+
+    def add_api_route(self, path: str, endpoint, **kwargs) -> None:
+        full_path = self.get_path(path)
+        if full_path not in self._registered_routes:
+            self.app.add_api_route(full_path, endpoint, **kwargs)
+            self._registered_routes.add(full_path)
+        if path == "/translate" and not self._prompt_routes_added:
+            self._add_prompt_routes()
+            self._prompt_routes_added = True
+
+    def start(self, _: gr.Blocks, app: FastAPI) -> None:
+        if self._registered:
+            return
+        self.app = app
+        self._register_routes()
+        self._registered = True
+
+    def _register_routes(self) -> None:
+        routes = [
+            ("/prompt/list", self.list_prompt_files, ["GET"]),
+            ("/prompt/get", self.get_prompt_file, ["GET"]),
+            ("/prompt/save", self.save_prompt_file, ["POST"]),
+            ("/prompt/delete", self.delete_prompt_file, ["POST"]),
+            ("/deepseek", self.get_deepseek_prompt, ["POST"]),
+            ("/siliconflow", self.get_siliconflow_prompt, ["POST"]),
+            ("/hunyuan", self.get_hunyuan_prompt, ["POST"]),
+            ("/volcengine_ark", self.get_volcengine_ark_prompt, ["POST"]),
+            ("/baidu_qianfan", self.get_baidu_qianfan_prompt, ["POST"]),
+            ("/translate", self.get_translation, ["POST"]),
+        ]
+        for path, endpoint, methods in routes:
+            self.add_api_route(path, endpoint, methods=methods)
+
+    def get_prompt_dir(self) -> str:
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        prompt_dir = os.path.join(base_dir, "prompt")
+        os.makedirs(prompt_dir, exist_ok=True)
+        return prompt_dir
+
+    def _add_prompt_routes(self) -> None:
+        self.add_api_route("/prompt/list", self.list_prompt_files, methods=["GET"])
+        self.add_api_route("/prompt/get", self.get_prompt_file, methods=["GET"])
+        self.add_api_route("/prompt/save", self.save_prompt_file, methods=["POST"])
+        self.add_api_route("/prompt/delete", self.delete_prompt_file, methods=["POST"])
+
+    async def list_prompt_files(self) -> Dict[str, Union[bool, List[str], str]]:
+        try:
+            files = [f for f in os.listdir(self.get_prompt_dir()) if f.endswith(".txt")]
+            return {"success": True, "files": files}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def get_prompt_file(self, name: str) -> Dict[str, Union[bool, str]]:
+        filepath = os.path.join(self.get_prompt_dir(), name)
+        try:
+            if os.path.exists(filepath):
+                with open(filepath, "r", encoding="utf-8") as f:
+                    return {"success": True, "content": f.read(), "filename": name}
+            return {"success": False, "error": "File not found"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def save_prompt_file(self, request: Request) -> Dict[str, Union[bool, str]]:
+        try:
+            data = await request.json()
+            filename = self._sanitize_filename(data.get("filename", ""))
+            filepath = os.path.join(self.get_prompt_dir(), filename)
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(data.get("content", ""))
+            return {"success": True, "message": "文件保存成功"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def delete_prompt_file(self, request: Request) -> Dict[str, Union[bool, str]]:
+        try:
+            data = await request.json()
+            filename = self._sanitize_filename(data.get("filename", ""))
+            filepath = os.path.join(self.get_prompt_dir(), filename)
+            if os.path.exists(filepath):
+                os.remove(filepath)
+                return {"success": True, "message": f"文件 {filename} 已删除"}
+            return {"success": False, "error": "文件不存在"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def _sanitize_filename(self, filename: str) -> str:
+        filename = filename.replace("/", "").replace("\\", "")
+        return filename if filename.endswith(".txt") else f"{filename}.txt"
+
+    def get_translation(self, translation_request: TranslationRequest) -> Dict[str, str]:
+        try:
+            req = urllib.request.Request(
+                shared.opts.gptp_deepl_api_url,
+                method="POST",
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"DeepL-Auth-Key {shared.opts.gptp_deepl_api_key.strip()}",
+                },
+                data=json.dumps({
+                    "text": [translation_request.text],
+                    "target_lang": translation_request.target_lang,
+                }).encode("utf-8"),
+            )
+            with urllib.request.urlopen(req) as response:
+                response_json = json.loads(response.read().decode("utf-8"))
+                return {"text": response_json["translations"][0]["text"]}
+        except urllib.error.HTTPError as e:
+            return {"error": f"HTTP error {e.code}: {e.reason}"}
+        except Exception as e:
+            return {"error": f"翻译错误: {str(e)}"}
+
+    def get_deepseek_prompt(self, request: DeepSeekRequest) -> Dict[str, str]:
+        try:
+            client = OpenAI(
+                api_key=shared.opts.gptp_deepseek_api_key.strip(),
+                base_url=shared.opts.gptp_deepseek_api_url.rstrip("/"),
+            )
+            messages = [{"role": "system", "content": request.system_message.strip()}] if request.system_message else []
+            messages.append({"role": "user", "content": request.text})
+            response = client.chat.completions.create(
+                model=request.model,
+                messages=messages,
+                temperature=request.temperature,
+                max_tokens=request.max_tokens,
+                top_p=request.top_p,
+            )
+            content = response.choices[0].message.content.strip()
+            if not content:
+                return {"error": "DeepSeek API 返回空内容"}
+            return {"text": content}
+        except openai.APIError as e:
+            return {"error": f"DeepSeek API 错误: {e.message if hasattr(e, 'message') else str(e)}"}
+        except Exception as e:
+            return {"error": f"处理错误: {str(e)}"}
+
+    def get_siliconflow_prompt(self, request: SiliconFlowRequest) -> Dict[str, str]:
+        try:
+            response = requests.post(
+                f"{shared.opts.gptp_siliconflow_api_url}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {shared.opts.gptp_siliconflow_api_key.strip()}",
+                    "Content-Type": "application/json",
+                },
+                json=request.dict(),
+                timeout=60,
+            )
+            response.raise_for_status()
+            data = response.json()
+            content = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+            if not content:
+                return {"error": "SiliconFlow API 返回空内容"}
+            return {"text": content}
+        except requests.RequestException as e:
+            return {"error": f"SiliconFlow API 错误: {str(e)}"}
+
+    def get_hunyuan_prompt(self, request: HunyuanRequest) -> Dict[str, Union[str, Dict]]:
+        try:
+            client = OpenAI(
+                api_key=shared.opts.gptp_hunyuan_api_key.strip(),
+                base_url=f"{shared.opts.gptp_hunyuan_api_url.rstrip('/')}/v1",
+            )
+            response = client.chat.completions.create(**request.dict())
+            content = response.choices[0].message.content.strip()
+            if not content:
+                return {"error": "Hunyuan API 返回空内容"}
+            return {"text": content, "usage": dict(response.usage)}
+        except Exception as e:
+            return {"error": f"Hunyuan API 错误: {str(e)}"}
+
+    def get_volcengine_ark_prompt(self, request: VolcengineArkRequest) -> Dict[str, str]:
+        """调用 Volcengine Ark API 生成提示"""
+        try:
+            response = requests.post(
+                f"{shared.opts.gptp_volcengine_ark_api_url}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {shared.opts.gptp_volcengine_ark_api_key.strip()}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": request.model,
+                    "messages": request.messages,
+                    "temperature": request.temperature,
+                    "max_tokens": request.max_tokens,
+                    "top_p": request.top_p,
+                },
+                timeout=60,
+            )
+            response.raise_for_status()
+            data = response.json()
+            content = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+            if not content:
+                return {"error": "Volcengine Ark API 返回空内容"}
+            return {"text": content}
+        except requests.RequestException as e:
+            return {"error": f"Volcengine Ark API 错误: {str(e)}"}
+
+    def get_baidu_qianfan_prompt(self, request: BaiduQianfanRequest) -> Dict[str, str]:
+        """调用 Baidu Qianfan API 生成提示"""
+        try:
+            # 获取 access_token
+            token_url = f"https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id={shared.opts.gptp_baidu_qianfan_api_key}&client_secret={shared.opts.gptp_baidu_qianfan_secret_key}"
+            token_response = requests.get(token_url)
+            token_response.raise_for_status()
+            access_token = token_response.json().get("access_token")
+
+            response = requests.post(
+                f"{shared.opts.gptp_baidu_qianfan_api_url}/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/{request.model}",
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {access_token}",
+                },
+                json={
+                    "messages": request.messages,
+                    "temperature": request.temperature,
+                    "max_output_tokens": request.max_tokens,
+                    "top_p": request.top_p,
+                },
+                timeout=60,
+            )
+            response.raise_for_status()
+            data = response.json()
+            content = data.get("result", "").strip()
+            if not content:
+                return {"error": "Baidu Qianfan API 返回空内容"}
+            return {"text": content}
+        except requests.RequestException as e:
+            return {"error": f"Baidu Qianfan API 错误: {str(e)}"}
+
+# 启动 API
+try:
+    api = GptpApi()
+    script_callbacks.on_app_started(api.start)
+except Exception as e:
+    print(f"API 启动失败: {str(e)}")

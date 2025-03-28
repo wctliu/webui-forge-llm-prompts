@@ -1,11 +1,8 @@
-
 window.gptp = window.gptp || {};
 gptp = window.gptp;
 
 gptp.loader = (function() {
-
     const prefix = 'gptp';
-
     let loader = null;
 
     function getLoader() {
@@ -47,98 +44,130 @@ gptp.loader = (function() {
     };
 })();
 
-document.addEventListener('DOMContentLoaded', function () {
-
+// 这是最重要的部分 - 所有样式都集中在这里注入
+document.addEventListener('DOMContentLoaded', function() {
     const style = document.createElement('style');
-    const prefix = gptp.loader.getPrefix();
-
+    style.id = 'gptp-global-styles';
+    
+    // 这里包含所有CSS样式规则
     style.innerHTML = `
-
-    .${prefix}-spinner {
-        height: 70px;
-        width: 70px;
-        margin: -35px 0 0 -35px;
+    /* 加载动画样式 */
+    .gptp-spinner {
+        height: 100px;
+        width: 100px;
+        margin: -50px 0 0 -50px !important;
         position: fixed;
         top: 50%;
         left: 50%;
         z-index: 99999999;
+        filter: drop-shadow(0 0 12px #10a37f);
     }
-
-    .${prefix}-spinner > div {
+    
+    .gptp-spinner > div {
         border-radius: 50%;
         position: absolute;
         border: calc(45px * 0.05) solid transparent;
-        border-top-color: rgb(64, 65, 79);
-        border-left-color: rgb(64, 65, 79);
-        animation: ${prefix}-spinner-animation 2s infinite;
+        border-top-color: #10a37f !important;
+        border-left-color: #10a37f !important;
+        animation: gptp-spinner-animation 1s infinite !important;
     }
-
-    .${prefix}-spinner > div:nth-child(1) {
-        height: calc(65px - 65px * 0.2 * 0);
-        width: calc(65px - 65px * 0.2 * 0);
-        top: calc(65px * 0.1 * 0);
-        left: calc(65px * 0.1 * 0);
-        animation-delay: calc(2000ms * 0.1 * 4);
-        z-index: 5;
+    
+    /* 对话框基础样式 */
+    .gptp-dialog {
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        --gptp-primary: #10a37f;
+        --gptp-border-color: #40414f;
+        --gptp-secondary-bg: #2d2d2d;
     }
-
-    .${prefix}-spinner > div:nth-child(2) {
-        height: calc(65px - 65px * 0.2 * 1);
-        width: calc(65px - 65px * 0.2 * 1);
-        top: calc(65px * 0.1 * 1);
-        left: calc(65px * 0.1 * 1);
-        animation-delay: calc(2000ms * 0.1 * 3);
-        z-index: 4;
+    
+    /* 输入框统一样式 */
+    .gptp-textarea, .gptp-select {
+        width: 100%;
+        padding: 10px 12px;
+        margin: 8px 0;
+        background: var(--gptp-secondary-bg);
+        border: 1px solid var(--gptp-border-color);
+        border-radius: 4px;
+        color: #ffffff;
+        font-size: 14px;
+        transition: all 0.3s;
     }
-
-    .${prefix}-spinner > div:nth-child(3) {
-        height: calc(65px - 65px * 0.2 * 2);
-        width: calc(65px - 65px * 0.2 * 2);
-        top: calc(65px * 0.1 * 2);
-        left: calc(65px * 0.1 * 2);
-        animation-delay: calc(2000ms * 0.1 * 2);
-        z-index: 3;
+    
+    /* 标签容器样式 */
+    .gptp-tab-container {
+        margin: 15px 0;
+        border-bottom: 1px solid var(--gptp-border-color);
     }
-
-    .${prefix}-spinner > div:nth-child(4) {
-        height: calc(65px - 65px * 0.2 * 3);
-        width: calc(65px - 65px * 0.2 * 3);
-        top: calc(65px * 0.1 * 3);
-        left: calc(65px * 0.1 * 3);
-        animation-delay: calc(2000ms * 0.1 * 1);
-        z-index: 2;
+    
+    /* 单个标签样式 */
+    .gptp-tab {
+        position: relative;
+        display: inline-block;
+        padding: 8px 30px 8px 12px;
+        margin-right: 5px;
+        background: var(--gptp-secondary-bg);
+        border: 1px solid var(--gptp-border-color);
+        border-bottom: none;
+        border-radius: 4px 4px 0 0;
+        color: #ffffff;
+        cursor: pointer;
+        transition: all 0.3s;
     }
-
-    .${prefix}-spinner > div:nth-child(5) {
-        height: calc(65px - 65px * 0.2 * 4);
-        width: calc(65px - 65px * 0.2 * 4);
-        top: calc(65px * 0.1 * 4);
-        left: calc(65px * 0.1 * 4);
-        animation-delay: calc(2000ms * 0.1 * 0);
-        z-index: 1;
+    
+    /* 激活标签样式 */
+    .gptp-tab.active {
+        background: #40414f;
+        border-color: #10a37f;
+        color: #ffffff;
     }
-
-    @keyframes ${prefix}-spinner-animation {
-        50% {
-            transform: rotate(360deg) scale(0.7);
+    
+    /* 标签关闭按钮 */
+    .gptp-tab-close {
+        position: absolute;
+        right: 6px;
+        top: 6px;
+        width: 16px;
+        height: 16px;
+        line-height: 16px;
+        text-align: center;
+        border-radius: 50%;
+        background: #ff4444;
+        color: white;
+        font-size: 12px;
+        cursor: pointer;
+        opacity: 0;
+        transition: all 0.2s;
+    }
+    
+    .gptp-tab:hover .gptp-tab-close {
+        opacity: 1;
+    }
+    
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+        .gptp-tabs {
+            display: flex;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+        .gptp-tab {
+            flex: 0 0 auto;
+        }
+        #gptp-main-button {
+            position: fixed;
+            bottom: 60px;
+            right: 10px;
+            z-index: 9999;
         }
     }
-    @-webkit-keyframes ${prefix}-spinner-animation {
-        50% {
-            transform: rotate(360deg) scale(0.7);
-        }
-    }
-    @-moz-keyframes ${prefix}-spinner-animation {
-        50% {
-            transform: rotate(360deg) scale(0.7);
-        }
-    }
-    @-o-keyframes ${prefix}-spinner-animation {
+    
+    /* 动画定义 */
+    @keyframes gptp-spinner-animation {
         50% {
             transform: rotate(360deg) scale(0.7);
         }
     }
     `;
-
+    
     document.head.appendChild(style);
 });
