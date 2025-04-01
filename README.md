@@ -3,9 +3,11 @@
     <img alt="" src="https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue" />
 </p>
 
-# stable-diffusion-webui-chat-gpt-prompts
+# webui-forge-llm-prompts
+This extension is mod from [stable-diffusion-webui-chat-gpt-prompts](https://github.com/ilian6806/stable-diffusion-webui-chat-gpt-prompts.git)
 
-This extension is for AUTOMATIC1111's [Stable Diffusion web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
+
+This extension is for AUTOMATIC1111's [Stable Diffusion web UI](https://github.com/AUTOMATIC1111/stable-diffusion-webui) and [forge](https://github.com/lllyasviel/stable-diffusion-webui-forge.git)
 
 ### Capabilities
 
