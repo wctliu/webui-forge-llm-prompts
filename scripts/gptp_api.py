@@ -20,6 +20,64 @@ import time
 from urllib.parse import urlencode
 import datetime
 
+# 添加新的签名模式API URL配置
+def on_ui_settings():
+    section = ("gptp", "ChatGPT Prompts")
+    
+    # 通用设置
+    shared.opts.add_option("gptp_default_api", shared.OptionInfo("OpenAI", "默认API类型", section=section))
+    shared.opts.add_option("gptp_openai_api_key", shared.OptionInfo("", "OpenAI API Key", section=section))
+    shared.opts.add_option("gptp_openai_api_url", shared.OptionInfo("https://api.openai.com", "OpenAI API URL", section=section))
+    shared.opts.add_option("gptp_openai_model", shared.OptionInfo("gpt-4-turbo", "OpenAI 默认模型", section=section))
+    shared.opts.add_option("gptp_anthropic_api_key", shared.OptionInfo("", "Anthropic API Key", section=section))
+    shared.opts.add_option("gptp_anthropic_api_url", shared.OptionInfo("https://api.anthropic.com", "Anthropic API URL", section=section))
+    shared.opts.add_option("gptp_anthropic_model", shared.OptionInfo("claude-3-opus-20240229", "Anthropic 默认模型", section=section))
+    shared.opts.add_option("gptp_custom_api_key", shared.OptionInfo("", "自定义API Key", section=section))
+    shared.opts.add_option("gptp_custom_api_url", shared.OptionInfo("http://localhost:8000", "自定义API URL", section=section))
+    shared.opts.add_option("gptp_custom_api_model", shared.OptionInfo("vicuna-13b", "自定义API模型", section=section))
+    shared.opts.add_option("gptp_deepseek_api_key", shared.OptionInfo("", "DeepSeek API Key", section=section))
+    shared.opts.add_option("gptp_deepseek_api_url", shared.OptionInfo("https://api.deepseek.com", "DeepSeek API URL", section=section))
+    shared.opts.add_option("gptp_deepseek_model", shared.OptionInfo("deepseek-chat", "DeepSeek 默认模型", section=section))
+    shared.opts.add_option("gptp_siliconflow_api_key", shared.OptionInfo("", "SiliconFlow API Key", section=section))
+    shared.opts.add_option("gptp_siliconflow_api_url", shared.OptionInfo("https://api.silicon-flow.com", "SiliconFlow API URL", section=section))
+    shared.opts.add_option("gptp_siliconflow_model", shared.OptionInfo("mixtral", "SiliconFlow 默认模型", section=section))
+    shared.opts.add_option("gptp_deepl_api_key", shared.OptionInfo("", "DeepL API Key", section=section))
+    shared.opts.add_option("gptp_deepl_api_url", shared.OptionInfo("https://api-free.deepl.com/v2/translate", "DeepL API URL", section=section))
+    
+    # 腾讯混元设置
+    shared.opts.add_option("gptp_hunyuan_api_key", shared.OptionInfo("", "腾讯混元 兼容模式 API Key", section=section))
+    shared.opts.add_option("gptp_hunyuan_api_url", shared.OptionInfo("https://hunyuan.cloud.tencent.com", "腾讯混元 兼容模式 API URL", section=section))
+    shared.opts.add_option("gptp_hunyuan_app_id", shared.OptionInfo("", "腾讯混元 兼容模式 App ID", section=section))
+    shared.opts.add_option("gptp_hunyuan_secret_id", shared.OptionInfo("", "腾讯混元 签名模式 Secret ID", section=section))
+    shared.opts.add_option("gptp_hunyuan_secret_key", shared.OptionInfo("", "腾讯混元 签名模式 Secret Key", section=section))
+    shared.opts.add_option("gptp_hunyuan_model", shared.OptionInfo("hunyuan-lite", "腾讯混元 默认模型", section=section))
+    shared.opts.add_option("gptp_hunyuan_max_image_size", shared.OptionInfo(4.0, "腾讯混元 最大图片大小 (MB)", section=section))
+    shared.opts.add_option("gptp_hunyuan_supported_image_types", shared.OptionInfo("jpg,jpeg,png", "腾讯混元 支持的图片类型", section=section))
+    
+    # 火山引擎方舟设置
+    shared.opts.add_option("gptp_volcengine_ark_api_key", shared.OptionInfo("", "火山引擎方舟 兼容模式 API Key", section=section))
+    shared.opts.add_option("gptp_volcengine_ark_api_url", shared.OptionInfo("https://ark.cn-beijing.volces.com", "火山引擎方舟 兼容模式 API URL", section=section))
+    shared.opts.add_option("gptp_volcengine_ark_native_api_url", shared.OptionInfo("https://ark.cn-beijing.volces.com", "火山引擎方舟 签名模式 API URL", section=section))
+    shared.opts.add_option("gptp_volcengine_ark_ak", shared.OptionInfo("", "火山引擎方舟 签名模式 Access Key", section=section))
+    shared.opts.add_option("gptp_volcengine_ark_sk", shared.OptionInfo("", "火山引擎方舟 签名模式 Secret Key", section=section))
+    shared.opts.add_option("gptp_volcengine_ark_model", shared.OptionInfo("doubao-1-5-vision-pro-32k-250115", "火山引擎方舟 默认模型", section=section))
+    shared.opts.add_option("gptp_volcengine_ark_max_image_size", shared.OptionInfo(4.0, "火山引擎方舟 最大图片大小 (MB)", section=section))
+    shared.opts.add_option("gptp_volcengine_ark_supported_image_types", shared.OptionInfo("jpg,jpeg,png", "火山引擎方舟 支持的图片类型", section=section))
+    
+    # 百度千帆设置
+    shared.opts.add_option("gptp_baidu_qianfan_api_key", shared.OptionInfo("", "百度千帆 兼容模式 API Key", section=section))
+    shared.opts.add_option("gptp_baidu_qianfan_api_url", shared.OptionInfo("https://aip.baidubce.com", "百度千帆 兼容模式 API URL", section=section))
+    shared.opts.add_option("gptp_baidu_qianfan_native_api_url", shared.OptionInfo("https://aip.baidubce.com", "百度千帆 签名模式 API URL", section=section))
+    shared.opts.add_option("gptp_baidu_qianfan_api_key_native", shared.OptionInfo("", "百度千帆 签名模式 API Key", section=section))
+    shared.opts.add_option("gptp_baidu_qianfan_secret_key", shared.OptionInfo("", "百度千帆 Secret Key", section=section))
+    shared.opts.add_option("gptp_baidu_qianfan_model", shared.OptionInfo("ernie-4.0", "百度千帆 默认模型", section=section))
+    shared.opts.add_option("gptp_baidu_qianfan_max_image_size", shared.OptionInfo(4.0, "百度千帆 最大图片大小 (MB)", section=section))
+    shared.opts.add_option("gptp_baidu_qianfan_supported_image_types", shared.OptionInfo("jpg,jpeg,png", "百度千帆 支持的图片类型", section=section))
+    
+    # 图片处理设置
+    shared.opts.add_option("gptp_max_image_dimension", shared.OptionInfo(1024, "最大图片尺寸 (像素)", section=section))
+    shared.opts.add_option("gptp_image_compression_quality", shared.OptionInfo(85, "图片压缩质量 (1-100)", section=section))
+
 # Request Models
 class DeepSeekRequest(BaseModel):
     model: str
@@ -62,19 +120,21 @@ class HunyuanRequest(BaseModel):
 
 class VolcengineArkRequest(BaseModel):
     model: str
-    messages: List[Dict[str, Union[str, Dict]]]
+    messages: List[Dict[str, Union[str, List, Dict]]]
     temperature: Optional[float] = 0.7
     max_tokens: Optional[int] = 800
     top_p: Optional[float] = 1.0
     stream: Optional[bool] = False
+    image_url: Optional[str] = None
 
 class BaiduQianfanRequest(BaseModel):
     model: str
-    messages: List[Dict[str, Union[str, Dict]]]
+    messages: List[Dict[str, Union[str, List, Dict]]]
     temperature: Optional[float] = 0.7
     max_tokens: Optional[float] = 800
     top_p: Optional[float] = 0.8
     stream: Optional[bool] = False
+    image_url: Optional[str] = None
 
 class HunyuanNativeRequest(BaseModel):
     model: str
@@ -83,22 +143,25 @@ class HunyuanNativeRequest(BaseModel):
     top_p: Optional[float] = 1.0
     max_tokens: Optional[int] = 800
     stream: Optional[bool] = False
+    image_url: Optional[str] = None
 
 class VolcengineArkNativeRequest(BaseModel):
     model: str
-    messages: List[Dict[str, Union[str, Dict]]]
+    messages: List[Dict[str, Union[str, List, Dict]]]
     temperature: Optional[float] = 0.7
     max_tokens: Optional[int] = 800
     top_p: Optional[float] = 1.0
     stream: Optional[bool] = False
+    image_url: Optional[str] = None
 
 class BaiduQianfanNativeRequest(BaseModel):
     model: str
-    messages: List[Dict[str, Union[str, Dict]]]
+    messages: List[Dict[str, Union[str, List, Dict]]]
     temperature: Optional[float] = 0.7
     max_tokens: Optional[float] = 800
     top_p: Optional[float] = 0.8
     stream: Optional[bool] = False
+    image_url: Optional[str] = None
 
 def compress_image(image_path: str, max_size_mb: float = 5, max_dimension: int = 1024, quality: int = 85) -> bytes:
     """压缩图片到指定大小和尺寸"""
@@ -395,8 +458,8 @@ class GptpApi:
                 if api_type == "hunyuan":
                     # 腾讯混元API的图片格式
                     processed_messages.append({
-                        "role": message["role"],
-                        "content": [
+                        "Role": message["role"].capitalize(),  # 首字母大写
+                        "Content": [
                             {"type": "text", "text": message.get("content", "")},
                             {"type": "image", "image_url": {"url": message["image_url"]}}
                         ]
@@ -423,20 +486,34 @@ class GptpApi:
                     # 默认格式，简单添加
                     processed_messages.append(message)
             else:
-                # 普通文本消息，直接添加
-                processed_messages.append(message)
+                # 普通文本消息，根据API类型处理
+                if api_type == "hunyuan":
+                    # 腾讯混元API需要首字母大写的Role
+                    processed_messages.append({
+                        "Role": message["role"].capitalize(),
+                        "Content": message.get("content", "")
+                    })
+                else:
+                    # 其他API保持原样
+                    processed_messages.append(message)
         
         # 根据API类型处理system消息
         if api_type == "hunyuan":
-            # 腾讯混元要求system消息在最开始
-            return system_messages + processed_messages
+            # 腾讯混元要求system消息在最开始，并且Role首字母大写
+            sys_messages = []
+            for msg in system_messages:
+                sys_messages.append({
+                    "Role": "System",
+                    "Content": msg.get("content", "")
+                })
+            return sys_messages + processed_messages
         elif api_type in ["volcengine_ark", "baidu_qianfan"]:
             # 某些API可能不支持system消息，需要转换成user消息
             if system_messages and processed_messages:
                 # 将system消息内容添加到第一个user消息前面
                 system_content = system_messages[0].get("content", "")
                 for i, msg in enumerate(processed_messages):
-                    if msg.get("role") == "user":
+                    if msg.get("role") == "user" or msg.get("Role") == "User":
                         if isinstance(msg.get("content"), list):
                             # 如果是多模态消息
                             for item in msg["content"]:
@@ -445,7 +522,10 @@ class GptpApi:
                                     break
                         else:
                             # 普通文本消息
-                            processed_messages[i]["content"] = system_content + "\n\n" + msg.get("content", "")
+                            if "content" in msg:
+                                processed_messages[i]["content"] = system_content + "\n\n" + msg.get("content", "")
+                            elif "Content" in msg:
+                                processed_messages[i]["Content"] = system_content + "\n\n" + msg.get("Content", "")
                         break
             return processed_messages
         
@@ -461,6 +541,11 @@ class GptpApi:
             
             # 处理消息
             processed_messages = self._process_messages(request.messages, "hunyuan")
+            
+            # 确保消息以user结尾
+            if processed_messages and processed_messages[-1].get("Role") not in ["User", "user"]:
+                # 添加一个空的用户消息
+                processed_messages.append({"Role": "User", "Content": "请继续"})
             
             # 构建请求参数
             request_params = request.dict()
@@ -478,75 +563,213 @@ class GptpApi:
         """调用 Volcengine Ark API 生成提示"""
         try:
             # 处理消息
-            processed_messages = self._process_messages(request.messages, "volcengine_ark")
+            processed_messages = []
             
+            # 检查是否包含图片
+            image_data = None
+            if request.image_url:
+                try:
+                    # 处理图片
+                    max_size = getattr(shared.opts, "gptp_volcengine_ark_max_image_size", 5)
+                    supported_types = getattr(shared.opts, "gptp_volcengine_ark_supported_image_types", "jpg,jpeg,png")
+                    
+                    # 验证图片
+                    is_valid, error_msg = validate_image(request.image_url, max_size, supported_types)
+                    if not is_valid:
+                        raise ValueError(error_msg)
+                    
+                    # 压缩图片
+                    compressed_image = compress_image(
+                        request.image_url,
+                        max_size_mb=max_size,
+                        max_dimension=shared.opts.gptp_max_image_dimension,
+                        quality=shared.opts.gptp_image_compression_quality
+                    )
+                    
+                    # 转换为base64
+                    image_data = base64.b64encode(compressed_image).decode('utf-8')
+                except Exception as e:
+                    return {"error": f"图片处理错误: {str(e)}"}
+            
+            # 处理消息
+            for message in request.messages:
+                message_copy = dict(message)
+                
+                # 处理图片（如果第一条用户消息且有图片）
+                if image_data and message_copy.get("role") == "user" and len(processed_messages) == 0:
+                    if "content" not in message_copy or not message_copy["content"]:
+                        message_copy["content"] = ""
+                        
+                    # 转换为兼容格式
+                    message_copy["content"] = [
+                        {"type": "text", "text": message_copy["content"]},
+                        {"type": "image", "image_url": f"data:image/jpeg;base64,{image_data}"}
+                    ]
+                
+                processed_messages.append(message_copy)
+            
+            # 构建API请求
             headers = {
                 "Authorization": f"Bearer {shared.opts.gptp_volcengine_ark_api_key.strip()}",
                 "Content-Type": "application/json"
             }
             
-            payload = request.dict()
-            payload["messages"] = processed_messages
+            payload = {
+                "model": request.model,
+                "messages": processed_messages,
+                "temperature": request.temperature,
+                "top_p": request.top_p,
+                "max_tokens": request.max_tokens,
+                "stream": request.stream
+            }
             
             response = requests.post(
-                f"{shared.opts.gptp_volcengine_ark_api_url}/chat/completions",
+                f"{shared.opts.gptp_volcengine_ark_api_url.rstrip('/')}/api/v3/chat/completions",
                 headers=headers,
                 json=payload,
                 timeout=60
             )
+            
+            if response.status_code == 422:
+                return {"error": f"火山引擎方舟 API 参数错误: {response.text}. 请检查API文档确认参数格式。"}
+            
             response.raise_for_status()
             data = response.json()
-            content = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
-            if not content:
-                return {"error": "Volcengine Ark API 返回空内容"}
-            return {"text": content}
+            
+            if "choices" in data and len(data["choices"]) > 0:
+                content = data["choices"][0]["message"]["content"].strip()
+                if not content:
+                    return {"error": "火山引擎方舟 API 返回空内容"}
+                return {"text": content}
+            else:
+                return {"error": f"火山引擎方舟 API 响应格式错误: {data}"}
+                
         except requests.RequestException as e:
-            return {"error": f"Volcengine Ark API 错误: {str(e)}"}
+            return {"error": f"火山引擎方舟 API 错误: {str(e)}"}
+        except Exception as e:
+            return {"error": f"处理错误: {str(e)}"}
 
     def get_baidu_qianfan_prompt(self, request: BaiduQianfanRequest) -> Dict[str, str]:
         """调用百度千帆 API 生成提示"""
         try:
+            # 优先使用请求中的API密钥，其次使用设置中的API密钥
+            client_id = request.dict().get("client_id", "")
+            client_secret = request.dict().get("client_secret", "")
+            
+            if not client_id:
+                client_id = shared.opts.gptp_baidu_qianfan_api_key.strip()
+            if not client_secret:
+                client_secret = shared.opts.gptp_baidu_qianfan_secret_key.strip()
+            
+            if not all([client_id, client_secret]):
+                return {"error": "请在设置中配置百度千帆的 API Key 和 Secret Key"}
+                
             # 处理消息
-            processed_messages = self._process_messages(request.messages, "baidu_qianfan")
+            processed_messages = request.messages
+            
+            # 检查是否包含图片
+            image_data = None
+            if request.image_url and request.image_url != "placeholder":
+                try:
+                    # 处理图片
+                    max_size = getattr(shared.opts, "gptp_baidu_qianfan_max_image_size", 5)
+                    supported_types = getattr(shared.opts, "gptp_baidu_qianfan_supported_image_types", "jpg,jpeg,png")
+                    
+                    # 验证图片
+                    is_valid, error_msg = validate_image(request.image_url, max_size, supported_types)
+                    if not is_valid:
+                        raise ValueError(error_msg)
+                    
+                    # 压缩图片
+                    compressed_image = compress_image(
+                        request.image_url,
+                        max_size_mb=max_size,
+                        max_dimension=shared.opts.gptp_max_image_dimension,
+                        quality=shared.opts.gptp_image_compression_quality
+                    )
+                    
+                    # 转换为base64
+                    image_data = base64.b64encode(compressed_image).decode('utf-8')
+                except Exception as e:
+                    return {"error": f"图片处理错误: {str(e)}"}
             
             # 获取访问令牌
-            token_response = requests.post(
-                f"{shared.opts.gptp_baidu_qianfan_api_url}/oauth/2.0/token",
-                params={
+            token_params = {}
+            if client_id and client_secret:
+                token_params = {
                     "grant_type": "client_credentials",
-                    "client_id": shared.opts.gptp_baidu_qianfan_api_key.strip(),
-                    "client_secret": shared.opts.gptp_baidu_qianfan_secret_key.strip()
+                    "client_id": client_id,
+                    "client_secret": client_secret
                 }
+            else:
+                return {"error": "API Key和Secret Key不能为空"}
+            
+            # 发送请求获取访问令牌
+            token_response = requests.post(
+                "https://aip.baidubce.com/oauth/2.0/token",
+                params=token_params,
+                headers={"Content-Type": "application/json"}
             )
-            token_response.raise_for_status()
-            access_token = token_response.json().get("access_token")
             
-            if not access_token:
-                return {"error": "获取百度千帆访问令牌失败"}
+            if token_response.status_code != 200:
+                error_info = token_response.json() if token_response.text else {"error": f"HTTP错误: {token_response.status_code}"}
+                error_msg = error_info.get("error_description", "") if isinstance(error_info, dict) else ""
+                return {"error": f"获取百度千帆访问令牌失败: {error_msg or token_response.text}"}
+                
+            result = token_response.json()
+            if "access_token" not in result:
+                return {"error": f"获取百度千帆访问令牌失败，返回内容中没有access_token: {result}"}
+                
+            access_token = result["access_token"]
             
-            # 发送请求
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {access_token}"
+            # 构建请求参数
+            payload = {
+                "messages": processed_messages,
+                "model": request.model,
+                "temperature": request.temperature,
+                "top_p": request.top_p,
+                "stream": request.stream
             }
             
-            payload = request.dict()
-            payload["messages"] = processed_messages
+            # 百度千帆使用max_output_tokens而不是max_tokens
+            if request.max_tokens:
+                payload["max_output_tokens"] = request.max_tokens
+            
+            # 构建API URL
+            model_name = request.model.lower()
+            api_url = f"{shared.opts.gptp_baidu_qianfan_api_url.rstrip('/')}/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/{model_name}?access_token={access_token}"
             
             response = requests.post(
-                f"{shared.opts.gptp_baidu_qianfan_api_url}/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/{request.model}",
-                headers=headers,
+                api_url,
                 json=payload,
+                headers={"Content-Type": "application/json"},
                 timeout=60
             )
-            response.raise_for_status()
+            
+            if response.status_code == 422:
+                return {"error": f"百度千帆 API 参数错误: {response.text}. 请检查API文档确认参数格式。"}
+                
+            if response.status_code != 200:
+                error_info = response.json() if response.text else {"error": f"HTTP错误: {response.status_code}"}
+                error_msg = error_info.get("error_msg", "") if isinstance(error_info, dict) else ""
+                return {"error": f"百度千帆 API 错误: {error_msg or response.text}"}
+                
             data = response.json()
-            content = data.get("result", "").strip()
-            if not content:
-                return {"error": "百度千帆 API 返回空内容"}
-            return {"text": content}
+            
+            if "result" in data:
+                content = data["result"].strip()
+                if not content:
+                    return {"error": "百度千帆 API 返回空内容"}
+                return {"text": content}
+            elif "error_code" in data and "error_msg" in data:
+                return {"error": f"百度千帆 API 错误 {data['error_code']}: {data['error_msg']}"}
+            else:
+                return {"error": f"百度千帆 API 响应格式错误: {data}"}
+                
         except requests.RequestException as e:
             return {"error": f"百度千帆 API 错误: {str(e)}"}
+        except Exception as e:
+            return {"error": f"处理错误: {str(e)}"}
 
     def get_hunyuan_native_prompt(self, request: HunyuanNativeRequest) -> Dict[str, Union[str, Dict]]:
         """使用腾讯混元签名模式获取提示词"""
@@ -560,7 +783,12 @@ class GptpApi:
             # 处理消息中的图片
             messages = self._process_messages(request.messages, "hunyuan")
             
-            # 构建请求体
+            # 确保消息以user结尾
+            if messages and messages[-1].get("Role") not in ["User", "user"]:
+                # 添加一个空的用户消息
+                messages.append({"Role": "User", "Content": "请继续"})
+            
+            # 构建请求体 - 腾讯混元API需要首字母大写
             request_body = {
                 "Messages": messages,
                 "Temperature": request.temperature,
@@ -569,13 +797,13 @@ class GptpApi:
                 "Model": request.model
             }
             
-            # 请求方法和域名
+            # 请求方法和域名 - 使用专门的签名模式URL
             service = "hunyuan"
-            host = "hunyuan.tencentcloudapi.com"
+            host = "hunyuan.tencentcloudapi.com"  # 官方签名模式API域名
             endpoint = "https://" + host
             region = "ap-guangzhou"  # 腾讯混元默认区域
-            action = "ChatCompletion"
-            version = "2023-10-17"  # API版本
+            action = "ChatCompletion"  # 修正为正确的Action名称
+            version = "2023-11-01"  # 使用最新API版本
             
             # 生成签名和请求头
             headers = self._generate_tc3_headers(service, host, region, action, version, request_body, secret_id, secret_key)
@@ -594,9 +822,11 @@ class GptpApi:
             result = response.json()
             # 根据腾讯混元API的响应格式，提取内容
             if "Response" in result and "Choice" in result["Response"]:
-                return {"content": result["Response"]["Choice"]["Message"]["Content"]}
-            elif "choices" in result and len(result["choices"]) > 0:
-                return {"content": result["choices"][0]["message"]["content"]}
+                content = result["Response"]["Choice"]["Message"]["Content"]
+                return {"text": content}
+            elif "Response" in result and "Choices" in result["Response"]:
+                content = result["Response"]["Choices"][0]["Message"]["Content"]
+                return {"text": content}
             else:
                 raise ValueError(f"腾讯混元 API 响应格式错误: {result}")
         except Exception as e:
@@ -670,34 +900,75 @@ class GptpApi:
     def get_volcengine_ark_native_prompt(self, request: VolcengineArkNativeRequest) -> Dict[str, str]:
         """使用火山引擎方舟签名模式获取提示词"""
         try:
-            access_key = shared.opts.gptp_volcengine_ark_ak
-            secret_key = shared.opts.gptp_volcengine_ark_sk
+            # 从请求中获取AccessKey和SecretKey
+            access_key = request.dict().get("access_key", "")
+            secret_key = request.dict().get("secret_key", "")
+            
+            # 如果请求中没有提供，则从设置中获取
+            if not access_key:
+                access_key = shared.opts.gptp_volcengine_ark_ak
+            if not secret_key:
+                secret_key = shared.opts.gptp_volcengine_ark_sk
             
             if not all([access_key, secret_key]):
                 raise ValueError("请在设置中配置火山引擎方舟的 AccessKey 和 SecretKey")
 
+            # 处理消息
+            processed_messages = request.messages
+            
             # 处理消息中的图片
-            messages = self._process_messages(request.messages, "volcengine_ark")
+            image_data = None
+            if request.image_url and request.image_url != "placeholder":
+                try:
+                    # 处理图片
+                    max_size = getattr(shared.opts, "gptp_volcengine_ark_max_image_size", 5)
+                    supported_types = getattr(shared.opts, "gptp_volcengine_ark_supported_image_types", "jpg,jpeg,png")
+                    
+                    # 验证图片
+                    is_valid, error_msg = validate_image(request.image_url, max_size, supported_types)
+                    if not is_valid:
+                        raise ValueError(error_msg)
+                    
+                    # 压缩图片
+                    compressed_image = compress_image(
+                        request.image_url,
+                        max_size_mb=max_size,
+                        max_dimension=shared.opts.gptp_max_image_dimension,
+                        quality=shared.opts.gptp_image_compression_quality
+                    )
+                    
+                    # 转换为base64
+                    image_data = base64.b64encode(compressed_image).decode('utf-8')
+                except Exception as e:
+                    return {"error": f"图片处理错误: {str(e)}"}
             
             # 构建请求参数
             params = {
-                "messages": messages,
+                "messages": processed_messages,
                 "model": request.model,
                 "temperature": request.temperature,
                 "top_p": request.top_p,
                 "max_tokens": request.max_tokens
             }
             
-            # 获取API地址
-            api_url = shared.opts.gptp_volcengine_ark_api_url.rstrip('/')
-            endpoint = f"{api_url}/chat/completions"
+            # 获取API地址 - 使用专门的签名模式URL
+            api_url = shared.opts.gptp_volcengine_ark_native_api_url.rstrip('/')
+            url_parts = api_url.replace("https://", "").replace("http://", "").split("/")
+            host = url_parts[0]
+            endpoint = f"{api_url}/api/v3/chat/completions"
+            path = "/api/v3/chat/completions"
             
             # 获取请求时间
-            timestamp = str(int(time.time()))
-            nonce = str(int(time.time() * 1000))
+            timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
             
-            # 构建待签名字符串
-            string_to_sign = f"{timestamp}\n{nonce}\n{json.dumps(params)}"
+            # 计算签名 - 使用火山引擎标准签名方式
+            # 1. 创建规范请求
+            content_type = "application/json"
+            body_json = json.dumps(params)
+            content_md5 = hashlib.md5(body_json.encode('utf-8')).hexdigest()
+            
+            # 构建StringToSign
+            string_to_sign = f"POST\n{content_md5}\n{content_type}\n{timestamp}\n{path}"
             
             # 计算签名
             signature = hmac.new(
@@ -708,8 +979,11 @@ class GptpApi:
             
             # 构建请求头
             headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"HMAC-SHA256 AccessKey={access_key}, Timestamp={timestamp}, Nonce={nonce}, Signature={signature}"
+                "Content-Type": content_type,
+                "Content-MD5": content_md5,
+                "Date": timestamp,
+                "Host": host,
+                "Authorization": f"HMAC-SHA256 AccessKey={access_key}, Signature={signature}"
             }
             
             # 发送请求
@@ -720,12 +994,17 @@ class GptpApi:
                 timeout=60
             )
             
+            if response.status_code == 422:
+                return {"error": f"火山引擎方舟 API 参数错误: {response.text}. 请检查API文档确认参数格式。"}
+                
             if response.status_code != 200:
                 raise ValueError(f"火山引擎方舟 API 错误: {response.status_code} {response.text}")
             
             result = response.json()
-            if "choices" in result and len(result["choices"]) > 0:
-                return {"content": result["choices"][0]["message"]["content"]}
+            if "data" in result and "text" in result["data"]:
+                return {"text": result["data"]["text"]}
+            elif "choices" in result and len(result["choices"]) > 0:
+                return {"text": result["choices"][0]["message"]["content"]}
             else:
                 raise ValueError(f"火山引擎方舟 API 响应格式错误: {result}")
         except Exception as e:
@@ -735,90 +1014,125 @@ class GptpApi:
     def get_baidu_qianfan_native_prompt(self, request: BaiduQianfanNativeRequest) -> Dict[str, str]:
         """使用百度千帆签名模式获取提示词"""
         try:
-            api_key = shared.opts.gptp_baidu_qianfan_api_key_native
-            secret_key = shared.opts.gptp_baidu_qianfan_secret_key
+            # 优先使用请求中的API密钥，其次使用设置中的API密钥
+            client_id = request.dict().get("client_id", "")
+            client_secret = request.dict().get("client_secret", "")
             
-            if not all([api_key, secret_key]):
-                raise ValueError("请在设置中配置百度千帆的 API Key 和 Secret Key")
+            if not client_id:
+                client_id = shared.opts.gptp_baidu_qianfan_api_key_native.strip()
+            if not client_secret:
+                client_secret = shared.opts.gptp_baidu_qianfan_secret_key.strip()
+            
+            if not all([client_id, client_secret]):
+                return {"error": "请在设置中配置百度千帆的 API Key 和 Secret Key"}
 
-            # 获取访问令牌
-            access_token = self._get_baidu_access_token(api_key, secret_key)
+            # 处理消息
+            processed_messages = request.messages
             
             # 处理消息中的图片
-            messages = self._process_messages(request.messages, "baidu_qianfan")
+            image_data = None
+            if request.image_url and request.image_url != "placeholder":
+                try:
+                    # 处理图片
+                    max_size = getattr(shared.opts, "gptp_baidu_qianfan_max_image_size", 5)
+                    supported_types = getattr(shared.opts, "gptp_baidu_qianfan_supported_image_types", "jpg,jpeg,png")
+                    
+                    # 验证图片
+                    is_valid, error_msg = validate_image(request.image_url, max_size, supported_types)
+                    if not is_valid:
+                        raise ValueError(error_msg)
+                    
+                    # 压缩图片
+                    compressed_image = compress_image(
+                        request.image_url,
+                        max_size_mb=max_size,
+                        max_dimension=shared.opts.gptp_max_image_dimension,
+                        quality=shared.opts.gptp_image_compression_quality
+                    )
+                    
+                    # 转换为base64
+                    image_data = base64.b64encode(compressed_image).decode('utf-8')
+                except Exception as e:
+                    return {"error": f"图片处理错误: {str(e)}"}
+
+            # 获取访问令牌
+            token_params = {}
+            if client_id and client_secret:
+                token_params = {
+                    "grant_type": "client_credentials",
+                    "client_id": client_id,
+                    "client_secret": client_secret
+                }
+            else:
+                return {"error": "API Key和Secret Key不能为空"}
+            
+            # 发送请求获取访问令牌
+            token_response = requests.post(
+                "https://aip.baidubce.com/oauth/2.0/token",
+                params=token_params,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if token_response.status_code != 200:
+                error_info = token_response.json() if token_response.text else {"error": f"HTTP错误: {token_response.status_code}"}
+                error_msg = error_info.get("error_description", "") if isinstance(error_info, dict) else ""
+                return {"error": f"获取百度千帆访问令牌失败: {error_msg or token_response.text}"}
+                
+            result = token_response.json()
+            if "access_token" not in result:
+                return {"error": f"获取百度千帆访问令牌失败，返回内容中没有access_token: {result}"}
+                
+            access_token = result["access_token"]
             
             # 构建请求参数
             params = {
-                "messages": messages,
+                "messages": processed_messages,
                 "temperature": request.temperature,
-                "top_p": request.top_p,
-                "max_output_tokens": request.max_tokens  # 百度千帆使用 max_output_tokens 而不是 max_tokens
+                "top_p": request.top_p
             }
             
+            # 百度千帆使用max_output_tokens而不是max_tokens
+            if request.max_tokens:
+                params["max_output_tokens"] = request.max_tokens
+            
             # 构建API URL
-            api_base = shared.opts.gptp_baidu_qianfan_api_url.rstrip('/')
             model_name = request.model.lower()
-            api_url = f"{api_base}/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/{model_name}"
+            api_url = f"{shared.opts.gptp_baidu_qianfan_native_api_url.rstrip('/')}/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/{model_name}?access_token={access_token}"
             
             # 发送请求
             response = requests.post(
                 api_url,
                 json=params,
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {access_token}"
-                },
+                headers={"Content-Type": "application/json"},
                 timeout=60
             )
             
+            if response.status_code == 422:
+                return {"error": f"百度千帆 API 参数错误: {response.text}. 请检查API文档确认参数格式。"}
+                
             if response.status_code != 200:
-                raise ValueError(f"百度千帆 API 错误: {response.status_code} {response.text}")
+                error_info = response.json() if response.text else {"error": f"HTTP错误: {response.status_code}"}
+                error_msg = error_info.get("error_msg", "") if isinstance(error_info, dict) else ""
+                return {"error": f"百度千帆 API 错误: {error_msg or response.text}"}
             
             result = response.json()
             if "result" in result:
-                return {"content": result["result"]}
-            elif "error_code" in result:
-                error_msg = result.get("error_msg", "未知错误")
-                raise ValueError(f"百度千帆 API 错误 {result['error_code']}: {error_msg}")
+                content = result["result"].strip()
+                if not content:
+                    return {"error": "百度千帆 API 返回空内容"}
+                return {"text": content}
+            elif "error_code" in result and "error_msg" in result:
+                return {"error": f"百度千帆 API 错误 {result['error_code']}: {result['error_msg']}"}
             else:
-                raise ValueError(f"百度千帆 API 响应格式错误: {result}")
+                return {"error": f"百度千帆 API 响应格式错误: {result}"}
         except Exception as e:
             # 错误信息处理
             return {"error": f"百度千帆 API 错误: {str(e)}"}
-
-    def _get_baidu_access_token(self, api_key: str, secret_key: str) -> str:
-        """获取百度千帆访问令牌"""
-        try:
-            # 构建请求参数
-            params = {
-                "grant_type": "client_credentials",
-                "client_id": api_key,
-                "client_secret": secret_key
-            }
-            
-            # 发送请求获取访问令牌
-            # 注意：这里使用的是正确的token获取URL
-            response = requests.post(
-                "https://aip.baidubce.com/oauth/2.0/token",
-                params=params,
-                headers={"Content-Type": "application/json"},
-                timeout=30
-            )
-            
-            if response.status_code != 200:
-                raise ValueError(f"获取百度千帆访问令牌失败: {response.status_code} {response.text}")
-            
-            result = response.json()
-            if "access_token" not in result:
-                raise ValueError(f"获取百度千帆访问令牌失败，返回内容中没有access_token: {result}")
-                
-            return result["access_token"]
-        except Exception as e:
-            raise ValueError(f"获取百度千帆访问令牌时出错: {str(e)}")
 
 # 启动 API
 try:
     api = GptpApi()
     script_callbacks.on_app_started(api.start)
+    ## script_callbacks.on_ui_settings(on_ui_settings)
 except Exception as e:
     print(f"API 启动失败: {str(e)}")

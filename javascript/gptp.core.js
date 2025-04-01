@@ -335,31 +335,45 @@ gptp.core = (function () {
             "Content-Type": "application/json"
           };
 
-          let volcengineQuery = prompt;
+          let volcengineArkNativeMessages = [];
+          if (instructions && instructions.trim().length > 0) {
+            volcengineArkNativeMessages.push({
+              role: "system",
+              content: instructions
+            });
+          }
+
           if (imageBase64) {
-            volcengineQuery = {
-              text: prompt,
-              image: imageBase64
-            };
+            volcengineArkNativeMessages.push({
+              role: "user",
+              content: [
+                { type: "text", text: prompt },
+                { type: "image", image_url: `data:image/jpeg;base64,${imageBase64}` }
+              ]
+            });
+          } else {
+            volcengineArkNativeMessages.push({
+              role: "user",
+              content: prompt
+            });
           }
 
           apiBody = JSON.stringify({
-            access_key: opts.gptp_volcengine_ark_ak,
-            secret_key: opts.gptp_volcengine_ark_sk,
-            query: volcengineQuery,
-            system: instructions,
             model: opts.gptp_volcengine_ark_model || "doubao-1-5-vision-pro-32k-250115",
+            messages: volcengineArkNativeMessages,
             temperature: parseFloat(opts.gptp_volcengine_ark_temperature || 0.7),
             top_p: parseFloat(opts.gptp_volcengine_ark_top_p || 1.0),
-            max_tokens: parseInt(opts.gptp_volcengine_ark_max_tokens || 800)
+            max_tokens: parseInt(opts.gptp_volcengine_ark_max_tokens || 800),
+            image_url: imageBase64 ? "placeholder" : null,
+            access_key: opts.gptp_volcengine_ark_ak,
+            secret_key: opts.gptp_volcengine_ark_sk
           });
           break;
 
         case 'BaiduQianfan':
           apiUrl = `${API_BASE}${API_CONFIG.PATHS.BAIDU_QIANFAN}`;
           apiHeaders = {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${opts.gptp_baidu_qianfan_api_key}`
+            "Content-Type": "application/json"
           };
 
           let baiduMessages = [];
@@ -375,7 +389,7 @@ gptp.core = (function () {
               role: "user",
               content: [
                 { type: "text", text: prompt },
-                { type: "image", image: imageBase64 }
+                { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}` } }
               ]
             });
           } else {
@@ -390,7 +404,10 @@ gptp.core = (function () {
             messages: baiduMessages,
             temperature: parseFloat(opts.gptp_baidu_qianfan_temperature || 0.7),
             top_p: parseFloat(opts.gptp_baidu_qianfan_top_p || 1.0),
-            max_tokens: parseInt(opts.gptp_baidu_qianfan_max_tokens || 800)
+            max_tokens: parseInt(opts.gptp_baidu_qianfan_max_tokens || 800),
+            client_id: opts.gptp_baidu_qianfan_api_key,
+            client_secret: opts.gptp_baidu_qianfan_secret_key,
+            image_url: imageBase64 ? "placeholder" : null
           });
           break;
 
@@ -400,23 +417,38 @@ gptp.core = (function () {
             "Content-Type": "application/json"
           };
 
-          let baiduQuery = prompt;
+          let baiduNativeMessages = [];
+          if (instructions && instructions.trim().length > 0) {
+            baiduNativeMessages.push({
+              role: "system",
+              content: instructions
+            });
+          }
+
           if (imageBase64) {
-            baiduQuery = {
-              text: prompt,
-              image: imageBase64
-            };
+            baiduNativeMessages.push({
+              role: "user",
+              content: [
+                { type: "text", text: prompt },
+                { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}` } }
+              ]
+            });
+          } else {
+            baiduNativeMessages.push({
+              role: "user",
+              content: prompt
+            });
           }
 
           apiBody = JSON.stringify({
-            api_key: opts.gptp_baidu_qianfan_api_key,
-            secret_key: opts.gptp_baidu_qianfan_secret_key,
-            query: baiduQuery,
-            system: instructions,
             model: opts.gptp_baidu_qianfan_model,
+            messages: baiduNativeMessages,
             temperature: parseFloat(opts.gptp_baidu_qianfan_temperature || 0.7),
             top_p: parseFloat(opts.gptp_baidu_qianfan_top_p || 1.0),
-            max_tokens: parseInt(opts.gptp_baidu_qianfan_max_tokens || 800)
+            max_tokens: parseInt(opts.gptp_baidu_qianfan_max_tokens || 800),
+            client_id: opts.gptp_baidu_qianfan_api_key_native,
+            client_secret: opts.gptp_baidu_qianfan_secret_key,
+            image_url: imageBase64 ? "placeholder" : null
           });
           break;
 
@@ -571,22 +603,51 @@ gptp.core = (function () {
     const apiType = document.getElementById('gptp-api-selector')?.value || 'DeepSeek';
     const instructionsElement = document.getElementById('gptp-instructions');
     const checkApiKey = (type) => {
-      const keyMap = {
-        'DeepSeek': 'gptp_deepseek_api_key',
-        'SiliconFlow': 'gptp_siliconflow_api_key',
-        'OpenAI': 'gptp_openai_api_key',
-        'Hunyuan': 'gptp_hunyuan_api_key',
-        'HunyuanNative': ['gptp_hunyuan_secret_id', 'gptp_hunyuan_secret_key'],
-        'VolcengineArk': 'gptp_volcengine_ark_api_key',
-        'VolcengineArkNative': ['gptp_volcengine_ark_ak', 'gptp_volcengine_ark_sk'],
-        'BaiduQianfan': 'gptp_baidu_qianfan_api_key',
-        'BaiduQianfanNative': ['gptp_baidu_qianfan_api_key_native', 'gptp_baidu_qianfan_secret_key']
+      const apiKeyMap = {
+        OpenAI: ['gptp_openai_api_key'],
+        Anthropic: ['gptp_anthropic_api_key'],
+        DeepSeek: ['gptp_deepseek_api_key'],
+        SiliconFlow: ['gptp_siliconflow_api_key'],
+        Custom: ['gptp_custom_api_key'],
+        Hunyuan: ['gptp_hunyuan_api_key'],
+        HunyuanNative: ['gptp_hunyuan_secret_id', 'gptp_hunyuan_secret_key'],
+        VolcengineArk: ['gptp_volcengine_ark_api_key'],
+        VolcengineArkNative: ['gptp_volcengine_ark_ak', 'gptp_volcengine_ark_sk'],
+        BaiduQianfan: ['gptp_baidu_qianfan_api_key', 'gptp_baidu_qianfan_secret_key'],
+        BaiduQianfanNative: ['gptp_baidu_qianfan_api_key_native', 'gptp_baidu_qianfan_secret_key']
       };
-      const keys = keyMap[type];
+
+      const keys = apiKeyMap[type];
+      if (!keys) return false;
+
+      // 如果需要检查多个键
       if (Array.isArray(keys)) {
-        return keys.every(key => opts[key]?.trim());
+        for (const key of keys) {
+          if (!opts[key] || opts[key].trim() === '') {
+            // 提示用户需要配置哪些键
+            let configMessage = `请在设置中配置 ${type} 所需的`;
+            if (type === 'HunyuanNative') {
+              configMessage += " SecretId 和 SecretKey";
+            } else if (type === 'VolcengineArkNative') {
+              configMessage += " AccessKey(AK) 和 SecretKey(SK)";
+            } else if (type === 'BaiduQianfan' || type === 'BaiduQianfanNative') {
+              configMessage += " API Key 和 Secret Key";
+            } else {
+              configMessage += ` ${key}`;
+            }
+            document.querySelector('#gptp-error-message').textContent = configMessage;
+            return false;
+          }
+        }
+        return true;
       }
-      return opts[keys]?.trim() || false;
+      
+      // 单个键的情况
+      if (!opts[keys[0]] || opts[keys[0]].trim() === '') {
+        document.querySelector('#gptp-error-message').textContent = `请在设置中配置 ${keys[0]}`;
+        return false;
+      }
+      return true;
     };
 
     if (!checkApiKey(apiType)) {
